@@ -1,0 +1,471 @@
+// Grammar Platform — Prisma schema
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Pooled connection (Neon -pooler host) for the running app.
+  url       = env("DATABASE_URL")
+  // Direct (non-pooled) connection for migrations. Set DIRECT_URL too;
+  // locally you can point it at the same value as DATABASE_URL.
+  directUrl = env("DIRECT_URL")
+}
+
+// ============= USERS & AUTH =============
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  password       String // bcryptjs hash
+  role           Role         @default(STUDENT)
+  experimentArm  ExperimentArm @default(EXPERIMENTAL) // research arm, drives feedback strategy
+  studyGroupId   String? // class/cohort (separate axis from experiment arm)
+  fullName       String?
+  consentGivenAt DateTime? // research consent; null = excluded from export
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  studyGroup         StudyGroup?         @relation(fields: [studyGroupId], references: [id], onDelete: SetNull)
+  submissions        Submission[]
+  invitesCreated     Invite[]
+  topicMastery       TopicMastery[]
+  refreshTokens      RefreshToken[]
+  assignments        Assignment[]
+  reviewItems        ReviewItem[]
+  learningEvents     LearningEvent[]
+  writingSubmissions WritingSubmission[]
+  readingSessions    ReadingSession[]
+  listeningSessions  ListeningSession[]
+  testAttempts       TestAttempt[]
+
+  @@index([email])
+  @@index([studyGroupId])
+  @@map("users")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum ExperimentArm {
+  CONTROL
+  EXPERIMENTAL
+}
+
+// ============= STUDY GROUPS (classes/cohorts) =============
+
+model StudyGroup {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  students User[]
+  settings GroupSettings?
+
+  @@map("study_groups")
+}
+
+model GroupSettings {
+  id              String  @id @default(cuid())
+  groupId         String  @unique
+  unlockedUnits   Int[] // which units are open to this group (empty = all)
+  weakThreshold   Float   @default(50) // mastery % below this = "weak topic"
+  atRiskThreshold Float   @default(40) // avg mastery below this = "at-risk student"
+
+  group StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("group_settings")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+model Invite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  createdBy String // teacherId
+  usedBy    String? // userId (if used)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([createdBy])
+  @@map("invites")
+}
+
+// ============= GRAMMAR TOPICS =============
+
+model Topic {
+  id          String @id @default(cuid())
+  slug        String @unique
+  title       String
+  unit        Int // 1-18
+  order       Int // order within unit
+  readingText String @db.Text
+
+  exercises     Exercise[]
+  mastery       TopicMastery[]
+  audio         TopicAudio?
+  presentations PresentationBlock[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([unit])
+  @@index([slug])
+  @@map("topics")
+}
+
+// ============= PRESENTATION BLOCKS (Approach 1: grammar taught many ways) =============
+
+enum PresentationMode {
+  DISCOVERY
+  FORM
+  MEANING
+  USE
+  VISUAL
+  CONTRAST
+  CONTEXT
+  ERRORS
+}
+
+model PresentationBlock {
+  id        String           @id @default(cuid())
+  topicId   String
+  mode      PresentationMode
+  order     Int              @default(0)
+  contentMd String           @db.Text
+  payload   Json? // timeline points / contrast pairs / error items / table
+  createdAt DateTime         @default(now())
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId, order])
+  @@map("presentation_blocks")
+}
+
+// ============= TOPIC AUDIO (TTS CACHE) =============
+
+model TopicAudio {
+  id          String   @id @default(cuid())
+  topicId     String   @unique
+  voice       String // Gemini prebuilt voice name
+  contentHash String // sha256(readingText + voice) — invalidates cache
+  mimeType    String   @default("audio/wav")
+  data        Bytes // WAV audio
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@map("topic_audio")
+}
+
+// ============= EXERCISES =============
+
+model Exercise {
+  id              String       @id @default(cuid())
+  topicId         String
+  type            ExerciseType @default(MULTIPLE_CHOICE)
+  prompt          String       @db.Text
+  payload         Json // {options, correctAnswerId, explanation, ...}
+  difficulty      Int          @default(3) // 1-5, for UI display
+  difficultyLogit Float        @default(0) // logit scale (-3..+3) for Elo adaptivity
+  aiGenerated     Boolean      @default(false)
+  validated       Boolean      @default(true) // AI-generated start as false
+  order           Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  topic       Topic        @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+  reviewItems ReviewItem[]
+
+  @@index([topicId])
+  @@index([type])
+  @@map("exercises")
+}
+
+enum ExerciseType {
+  MULTIPLE_CHOICE
+  FILL_IN_BLANK
+  MATCHING
+  TRUE_FALSE
+  REORDER
+  SPEAKING
+  // Approach 2 (ось B): additional deterministic cognitive modes
+  OPEN_CLOZE // recall: type the missing word, no options
+  WORD_FORMATION // produce: form the right word from a root
+  KEY_WORD_TRANSFORMATION // transform: rewrite using a key word
+  ERROR_CORRECTION // correct: fix the wrong word
+  CATEGORIZE // recognise: sort items into buckets
+}
+
+// ============= SUBMISSIONS =============
+
+model Submission {
+  id             String   @id @default(cuid())
+  userId         String
+  exerciseId     String
+  answer         Json
+  isCorrect      Boolean
+  feedback       String   @db.Text
+  feedbackType   String? // minimal | metalinguistic | fallback
+  errorCategory  String? // tense | article | agreement | preposition | word-order | other | none
+  responseTimeMs Int? // client-measured response latency
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise            @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  speaking SpeakingSubmission?
+
+  @@index([userId])
+  @@index([exerciseId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([exerciseId, isCorrect])
+  @@map("submissions")
+}
+
+// ============= SPEAKING (STT) =============
+
+model SpeakingSubmission {
+  id               String   @id @default(cuid())
+  submissionId     String   @unique
+  audioR2Key       String // audio file location in R2
+  transcript       String   @db.Text
+  clarity          Int // 0-5
+  grammar          Int // 0-5
+  pace             Int // 0-5
+  totalScore       Float // (clarity + grammar + pace) / 3
+  detailedFeedback String   @db.Text
+  createdAt        DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("speaking_submissions")
+}
+
+// ============= TEACHER: ASSIGNMENTS =============
+
+model Assignment {
+  id          String    @id @default(cuid())
+  createdBy   String // teacherId
+  title       String
+  description String?
+  topicIds    String[] // topics to practice
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([createdBy])
+  @@map("assignments")
+}
+
+// ============= RESEARCH: EVENTS =============
+
+model LearningEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  eventType String // submit_exercise | submit_writing | start_reading | ...
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("learning_events")
+}
+
+// ============= WRITING =============
+
+model WritingTask {
+  id        String   @id @default(cuid())
+  topicId   String?
+  prompt    String   @db.Text
+  minWords  Int      @default(50)
+  maxWords  Int      @default(200)
+  createdAt DateTime @default(now())
+
+  submissions WritingSubmission[]
+
+  @@index([topicId])
+  @@map("writing_tasks")
+}
+
+model WritingSubmission {
+  id              String   @id @default(cuid())
+  userId          String
+  writingTaskId   String
+  text            String   @db.Text
+  wordCount       Int
+  errors          Json // [{type, original, correction, explanation, startIndex, endIndex}]
+  overallFeedback String   @db.Text
+  grammarScore    Int // 0-100
+  responseTimeMs  Int?
+  createdAt       DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task WritingTask @relation(fields: [writingTaskId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([writingTaskId])
+  @@map("writing_submissions")
+}
+
+// ============= READING / LISTENING SESSIONS =============
+
+model ReadingSession {
+  id                 String    @id @default(cuid())
+  userId             String
+  topicId            String
+  startedAt          DateTime  @default(now())
+  completedAt        DateTime?
+  readingTimeMs      Int?
+  wpm                Float? // words per minute
+  comprehensionScore Float? // 0-100
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([topicId])
+  @@map("reading_sessions")
+}
+
+model ListeningSession {
+  id                 String    @id @default(cuid())
+  userId             String
+  topicId            String
+  playCount          Int       @default(0)
+  playbackSpeed      Float     @default(1.0)
+  startedAt          DateTime  @default(now())
+  completedAt        DateTime?
+  comprehensionScore Float? // 0-100
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([topicId])
+  @@map("listening_sessions")
+}
+
+// ============= FORMAL TESTS =============
+
+enum TestType {
+  PRE_TEST
+  POST_TEST
+  DELAYED_POST
+  QUIZ
+}
+
+model Test {
+  id          String   @id @default(cuid())
+  title       String
+  type        TestType @default(QUIZ)
+  topicIds    String[]
+  questionIds String[] // exercise ids
+  durationMin Int?
+  createdAt   DateTime @default(now())
+
+  attempts TestAttempt[]
+
+  @@map("tests")
+}
+
+model TestAttempt {
+  id          String    @id @default(cuid())
+  userId      String
+  testId      String
+  answers     Json
+  score       Float     @default(0) // 0-100
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([testId])
+  @@map("test_attempts")
+}
+
+// ============= SPACED REPETITION (SM-2) =============
+
+model ReviewItem {
+  id             String    @id @default(cuid())
+  userId         String
+  exerciseId     String
+  interval       Int       @default(0) // days until next review
+  easeFactor     Float     @default(2.5)
+  repetitions    Int       @default(0)
+  quality        Int       @default(0) // 0-5: last performance
+  nextReviewDate DateTime
+  lastReviewDate DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, exerciseId])
+  @@index([userId])
+  @@index([nextReviewDate])
+  @@index([userId, nextReviewDate])
+  @@map("review_items")
+}
+
+// ============= MASTERY TRACKING =============
+
+model TopicMastery {
+  id              String   @id @default(cuid())
+  userId          String
+  topicId         String
+  masteryPct      Float    @default(0) // 0-100
+  abilityEstimate Float    @default(0) // θ on logit scale, drives adaptivity
+  attempts        Int      @default(0)
+  correct         Int      @default(0)
+  // Approach 4: per-topic spaced repetition (additive)
+  state           MasteryState @default(NEW)
+  nextReviewAt    DateTime?
+  reviewCount     Int          @default(0)
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId])
+  @@index([topicId])
+  @@index([userId, nextReviewAt])
+  @@map("topic_mastery")
+}
+
+enum MasteryState {
+  NEW
+  LEARNING
+  PRACTICED
+  MASTERED
+}

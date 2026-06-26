@@ -1,0 +1,37 @@
+# Render Blueprint for GrammarNovaLearn backend (NestJS + Prisma).
+# In Render: New + → Blueprint → connect this repo. Render reads this file.
+# Secrets marked sync:false must be filled in the Render dashboard.
+services:
+  - type: web
+    name: grammarnovalearn-api
+    runtime: node
+    region: frankfurt          # pick the region closest to your users
+    plan: free                 # free spins down when idle; upgrade for always-on
+    rootDir: backend
+    # --include=dev forces devDependencies (nest CLI, prisma) even when NODE_ENV=production
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
+    # Run migrations once per deploy, before the new version goes live.
+    preDeployCommand: npx prisma migrate deploy
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL        # Neon POOLED url (host has -pooler)
+        sync: false
+      - key: DIRECT_URL          # Neon DIRECT url (host without -pooler)
+        sync: false
+      - key: JWT_SECRET          # 32+ chars; generate with: openssl rand -base64 48
+        sync: false
+      - key: GOOGLE_API_KEY      # Gemini API key
+        sync: false
+      - key: FRONTEND_URL        # your Vercel prod URL, e.g. https://grammarnovalearn.vercel.app
+        sync: false
+      - key: JWT_EXPIRY
+        value: 24h
+      - key: REFRESH_TOKEN_EXPIRY
+        value: 7d
+      - key: INVITE_CODE_LENGTH
+        value: "8"
+      - key: INVITE_EXPIRY_DAYS
+        value: "30"

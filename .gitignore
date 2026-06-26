@@ -1,0 +1,24 @@
+# Root-level safety net for the monorepo (backend/ + frontend/ each have their own too)
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# Never commit secrets
+.env
+.env.*
+!.env.example
+**/.env
+!**/.env.example
+
+# Internal prompt / spec docs (keep README.md and DEPLOYMENT.md)
+*PROMPT*.md
+**/ADVANCED_BACKEND_PROMPT.md
+**/ADVANCED_FRONTEND_PROMPT.md
+**/UI_KIT_DESIGN_SYSTEM.md
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
