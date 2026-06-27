@@ -77,8 +77,9 @@ The repo ships a **`render.yaml` blueprint**, so this is mostly one click.
 
 4. Click **Apply**. Render will:
    - `npm install --include=dev && npx prisma generate && npm run build`
-   - run `npx prisma migrate deploy` (pre-deploy) → creates all tables
-   - start with `npm run start:prod`
+   - on start: `npx prisma migrate deploy` (creates/updates tables) then
+     `npm run start:prod` (free tier has no pre-deploy hook, so migrations run
+     at start — idempotent, a no-op when nothing is pending)
    - health-check `GET /health`
 
 5. When it goes green, note the service URL, e.g.

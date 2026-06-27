@@ -10,9 +10,9 @@ services:
     rootDir: backend
     # --include=dev forces devDependencies (nest CLI, prisma) even when NODE_ENV=production
     buildCommand: npm install --include=dev && npx prisma generate && npm run build
-    # Run migrations once per deploy, before the new version goes live.
-    preDeployCommand: npx prisma migrate deploy
-    startCommand: npm run start:prod
+    # Free tier has no pre-deploy hook, so apply migrations right before start.
+    # `migrate deploy` is idempotent — a no-op when there's nothing pending.
+    startCommand: npx prisma migrate deploy && npm run start:prod
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
