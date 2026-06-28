@@ -3,6 +3,7 @@ import { ValidationPipe } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import { json, urlencoded } from "express";
+import type { Request, Response } from "express";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { AppModule } from "./app.module";
@@ -47,6 +48,11 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup("docs", app, document);
   }
+
+  // Friendly root route — avoids a 404 when a browser or probe hits "/".
+  app.getHttpAdapter().get("/", (_req: Request, res: Response) => {
+    res.json({ name: "GrammarNovaLearn API", status: "ok", health: "/health" });
+  });
 
   // Render (and most PaaS) inject PORT; bind 0.0.0.0 so the platform can reach us.
   const port = process.env.PORT || process.env.API_PORT || 3000;
