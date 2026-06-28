@@ -11,7 +11,7 @@ const PRESETS: RangePreset[] = ["7d", "30d", "semester"];
 export function DateRangePicker() {
   const { preset, setPreset } = useDateRange();
   return (
-    <Flex gap="6px">
+    <Flex gap="6px" wrap="wrap">
       {PRESETS.map((p) => (
         <Button
           key={p}

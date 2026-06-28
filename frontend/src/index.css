@@ -69,7 +69,11 @@ button[disabled],
   }
 }
 .page-in {
-  animation: pageIn 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* `backwards` (not `both`): keep the pre-start state to avoid a flash, but do
+     NOT retain a transform after the animation ends — a lingering transform on
+     an ancestor turns it into the containing block for position:fixed children,
+     which would push fixed modals/overlays off the viewport. */
+  animation: pageIn 260ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

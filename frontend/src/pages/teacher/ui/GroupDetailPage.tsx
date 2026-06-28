@@ -84,10 +84,10 @@ export default function GroupDetailPage() {
 
               <Card title="Mastery distribution">
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={data.distribution} barSize={48}>
+                  <BarChart data={data.distribution} barSize={48} margin={{ left: 0, right: 8, top: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" vertical={false} />
-                    <XAxis dataKey="range" tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={{ stroke: "var(--chakra-colors-border)" }} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="range" tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={{ stroke: "var(--chakra-colors-border)" }} tickLine={false} interval={0} />
+                    <YAxis allowDecimals={false} tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={false} tickLine={false} width={32} />
                     <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
                     <Bar dataKey="count" fill="#4F7CFF" radius={[4, 4, 0, 0]} />
                   </BarChart>

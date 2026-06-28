@@ -1,4 +1,11 @@
-import { Box, Flex, Grid, Stack, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Grid,
+  Stack,
+  Text,
+  useBreakpointValue,
+} from "@chakra-ui/react";
 import {
   Activity,
   AlertTriangle,
@@ -92,8 +99,15 @@ function RankList({
   );
 }
 
+const groupLabel = (v: string) => {
+  const s = String(v).replace(/^Group\s*/i, "");
+  return s.length > 20 ? s.slice(0, 19) + "…" : s;
+};
+
 export default function TeacherAnalyticsPage() {
   const navigate = useNavigate();
+  // On mobile, render the group bar chart horizontally so long names stay readable.
+  const groupsVertical = useBreakpointValue({ base: true, md: false }) ?? false;
   const { preset } = useDateRange();
   const { data: overview, isError, isFetching, refetch } = useOverview(preset);
   const { data: groups } = useGroupsCompare(preset);
@@ -151,7 +165,7 @@ export default function TeacherAnalyticsPage() {
           </RouterLink>
         }
         actions={
-          <Flex gap="10px">
+          <Flex gap="10px" wrap="wrap">
             <DateRangePicker />
             <Button variant="outline" onClick={() => void downloadCsvExport()}>
               <Download size={15} strokeWidth={1.5} />
@@ -185,7 +199,7 @@ export default function TeacherAnalyticsPage() {
             <EmptyState icon={Activity} title="No activity in this period" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={timelineRows}>
+              <AreaChart data={timelineRows} margin={{ left: 0, right: 12, top: 8, bottom: 0 }}>
                 <defs>
                   <linearGradient id="accFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#4F7CFF" stopOpacity={0.35} />
@@ -193,8 +207,8 @@ export default function TeacherAnalyticsPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" vertical={false} />
-                <XAxis dataKey="day" tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={{ stroke: "var(--chakra-colors-border)" }} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="day" tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={{ stroke: "var(--chakra-colors-border)" }} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+                <YAxis domain={[0, 100]} tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={false} tickLine={false} width={36} />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Area type="monotone" dataKey="accuracy" stroke="#4F7CFF" strokeWidth={2} fill="url(#accFill)" />
               </AreaChart>
@@ -251,15 +265,57 @@ export default function TeacherAnalyticsPage() {
 
         <Card title="Accuracy by group">
           {groupRows.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={groupRows} barSize={40} margin={{ bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={{ stroke: "var(--chakra-colors-border)" }} tickLine={false} interval={0} />
-                <YAxis domain={[0, 100]} tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                <Bar dataKey="accuracy" fill="#4F7CFF" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            groupsVertical ? (
+              // Mobile: a compact custom bar list — full group names, no clipping,
+              // no wasted space (recharts category labels don't fit narrow screens).
+              <Stack gap="14px" py="4px">
+                {groupRows.map((g) => (
+                  <Box key={g.name}>
+                    <Flex justify="space-between" align="baseline" gap="8px" mb="6px">
+                      <Text fontSize="13px" color="text" lineClamp={1}>
+                        {g.name.replace(/^Group\s*/i, "")}
+                      </Text>
+                      <Text
+                        fontSize="12px"
+                        fontFamily="mono"
+                        color="textMuted"
+                        flexShrink={0}
+                      >
+                        {Math.round(g.accuracy)}%
+                      </Text>
+                    </Flex>
+                    <Box bg="surface2" borderRadius="full" h="8px" overflow="hidden">
+                      <Box
+                        h="full"
+                        w={`${Math.max(0, Math.min(100, g.accuracy))}%`}
+                        bg="#4F7CFF"
+                        borderRadius="full"
+                      />
+                    </Box>
+                  </Box>
+                ))}
+              </Stack>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={groupRows} barSize={40} margin={{ bottom: 28, left: 0, right: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 11 }}
+                    axisLine={{ stroke: "var(--chakra-colors-border)" }}
+                    tickLine={false}
+                    interval={0}
+                    angle={-18}
+                    textAnchor="end"
+                    height={56}
+                    tickFormatter={groupLabel}
+                  />
+                  <YAxis domain={[0, 100]} tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={false} tickLine={false} width={36} />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                  <Bar dataKey="accuracy" fill="#4F7CFF" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )
           ) : (
             <EmptyState icon={Users} title="No groups yet" />
           )}

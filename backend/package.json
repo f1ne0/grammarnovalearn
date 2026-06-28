@@ -25,7 +25,9 @@
     "seed:demo": "ts-node prisma/seeds/demo-seed.ts",
     "seed:full": "ts-node prisma/seeds/full-seed.ts",
     "seed:presentations": "ts-node prisma/seeds/presentations-seed.ts",
-    "seed:extra-exercises": "ts-node prisma/seeds/extra-exercises-seed.ts"
+    "seed:extra-exercises": "ts-node prisma/seeds/extra-exercises-seed.ts",
+    "seed:reviews": "ts-node prisma/seeds/reviews-seed.ts",
+    "seed:skills": "ts-node prisma/seeds/skills-seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1063.0",

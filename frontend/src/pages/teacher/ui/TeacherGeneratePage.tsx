@@ -343,8 +343,12 @@ export default function TeacherGeneratePage() {
                       borderColor="border"
                       _last={{ borderBottom: "none" }}
                     >
-                      <Flex gap="14px" align="center">
-                        <Box flex="1" minW={0}>
+                      <Flex
+                        gap="14px"
+                        align="center"
+                        flexWrap={{ base: "wrap", md: "nowrap" }}
+                      >
+                        <Box flex="1" minW={{ base: "100%", md: 0 }}>
                           <Text fontSize="14px" color="text" mb="4px">
                             {ex.prompt}
                           </Text>
@@ -358,45 +362,56 @@ export default function TeacherGeneratePage() {
                             </Text>
                           </Flex>
                         </Box>
-                        <Button
-                          variant="ghost"
-                          h="30px"
-                          px="10px"
-                          fontSize="13px"
-                          onClick={() => toggle(ex.id)}
+                        <Flex
+                          gap="8px"
+                          align="center"
+                          flexShrink={0}
+                          flexWrap="wrap"
+                          w={{ base: "full", md: "auto" }}
+                          justify={{ base: "flex-start", md: "flex-end" }}
+                          ml={{ base: 0, md: "auto" }}
+                          mt={{ base: "4px", md: 0 }}
                         >
-                          <Box
-                            as="span"
-                            display="inline-flex"
-                            transform={open ? "rotate(180deg)" : undefined}
-                            transition="transform 0.15s"
+                          <Button
+                            variant="ghost"
+                            h="30px"
+                            px="10px"
+                            fontSize="13px"
+                            onClick={() => toggle(ex.id)}
                           >
-                            <ChevronDown size={14} strokeWidth={1.5} />
-                          </Box>
-                          {open ? "Hide" : "Answer"}
-                        </Button>
-                        <Button
-                          variant="subtle"
-                          h="30px"
-                          px="12px"
-                          fontSize="13px"
-                          disabled={busy}
-                          onClick={() => approve(ex.id)}
-                        >
-                          <Check size={14} strokeWidth={1.5} />
-                          Approve
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          h="30px"
-                          px="12px"
-                          fontSize="13px"
-                          disabled={busy}
-                          onClick={() => setDiscardId(ex.id)}
-                        >
-                          <X size={14} strokeWidth={1.5} />
-                          Discard
-                        </Button>
+                            <Box
+                              as="span"
+                              display="inline-flex"
+                              transform={open ? "rotate(180deg)" : undefined}
+                              transition="transform 0.15s"
+                            >
+                              <ChevronDown size={14} strokeWidth={1.5} />
+                            </Box>
+                            {open ? "Hide" : "Answer"}
+                          </Button>
+                          <Button
+                            variant="subtle"
+                            h="30px"
+                            px="12px"
+                            fontSize="13px"
+                            disabled={busy}
+                            onClick={() => approve(ex.id)}
+                          >
+                            <Check size={14} strokeWidth={1.5} />
+                            Approve
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            h="30px"
+                            px="12px"
+                            fontSize="13px"
+                            disabled={busy}
+                            onClick={() => setDiscardId(ex.id)}
+                          >
+                            <X size={14} strokeWidth={1.5} />
+                            Discard
+                          </Button>
+                        </Flex>
                       </Flex>
                       {open && <AnswerPreview ex={ex} />}
                     </Box>

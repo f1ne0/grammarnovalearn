@@ -225,7 +225,7 @@ export default function TeacherStudentsPage() {
         title="Students"
         breadcrumb="Teacher"
         actions={
-          <Flex gap="8px">
+          <Flex gap="8px" wrap="wrap">
             <Button variant="outline" onClick={exportCsv} disabled={!students?.length}>
               <Download size={15} strokeWidth={1.5} />
               Export

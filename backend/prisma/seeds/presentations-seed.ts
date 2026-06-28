@@ -5,14 +5,19 @@
  */
 import { PrismaClient, Prisma, PresentationMode } from "@prisma/client";
 import { PRESENTATIONS } from "./content/presentations";
+import { PRESENTATIONS_EXTRA } from "./content/presentations-extra";
 
 const prisma = new PrismaClient();
+
+// Merge the original hand-written presentations with the extra ones that
+// cover the remaining topics. (Extra keys don't overlap the originals.)
+const ALL_PRESENTATIONS = { ...PRESENTATIONS, ...PRESENTATIONS_EXTRA };
 
 async function main() {
   console.log("🌱 Seeding presentation blocks (ось A)...");
   let total = 0;
 
-  for (const [slug, blocks] of Object.entries(PRESENTATIONS)) {
+  for (const [slug, blocks] of Object.entries(ALL_PRESENTATIONS)) {
     const topic = await prisma.topic.findUnique({
       where: { slug },
       select: { id: true },

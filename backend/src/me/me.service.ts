@@ -232,4 +232,61 @@ export class MeService {
       },
     });
   }
+
+  /**
+   * Leaderboard of the student's own study group, ranked by accuracy then
+   * exercises done. Names are limited to the group; the caller is flagged isMe.
+   */
+  async leaderboard(userId: string) {
+    const me = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { studyGroupId: true },
+    });
+    if (!me?.studyGroupId) {
+      return { hasGroup: false, groupName: null, entries: [] };
+    }
+
+    const group = await this.prisma.studyGroup.findUnique({
+      where: { id: me.studyGroupId },
+      select: { name: true },
+    });
+
+    const members = await this.prisma.user.findMany({
+      where: { studyGroupId: me.studyGroupId, role: 'STUDENT', isActive: true },
+      select: { id: true, fullName: true, email: true },
+    });
+    const ids = members.map((m) => m.id);
+
+    const agg = await this.prisma.topicMastery.groupBy({
+      by: ['userId'],
+      where: { userId: { in: ids } },
+      _sum: { attempts: true, correct: true },
+    });
+    const byUser = new Map(agg.map((a) => [a.userId, a._sum]));
+
+    const alias = (m: { fullName: string | null; email: string }) =>
+      m.fullName?.trim() || m.email.split('@')[0];
+
+    const rows = members.map((m) => {
+      const s = byUser.get(m.id);
+      const attempts = s?.attempts ?? 0;
+      const correct = s?.correct ?? 0;
+      return {
+        userId: m.id,
+        name: alias(m),
+        exercises: attempts,
+        accuracy: attempts > 0 ? Math.round((correct / attempts) * 100) : 0,
+        isMe: m.id === userId,
+      };
+    });
+
+    rows.sort((a, b) => b.accuracy - a.accuracy || b.exercises - a.exercises);
+
+    const entries = rows.map((r, i) => ({ rank: i + 1, ...r }));
+    return {
+      hasGroup: true,
+      groupName: group?.name ?? null,
+      entries,
+    };
+  }
 }

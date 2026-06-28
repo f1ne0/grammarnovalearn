@@ -238,7 +238,7 @@ export default function TestTakePage() {
           </RouterLink>
         }
         actions={
-          <Flex align="center" gap="12px">
+          <Flex align="center" gap="12px" wrap="wrap">
             {remaining !== null && !result && (
               <Flex
                 align="center"

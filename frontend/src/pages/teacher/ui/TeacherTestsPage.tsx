@@ -438,33 +438,35 @@ export default function TeacherTestsPage() {
                     onClick={() => navigate(`/teacher/tests/${t.id}`)}
                   >
                     <ClipboardList size={16} strokeWidth={1.5} color="var(--chakra-colors-text-faint)" />
-                    <Box flex="1" minW={0}>
-                      <Text fontSize="14px" color="text">
+                    <Box flex="1" minW="140px">
+                      <Text fontSize="14px" color="text" lineClamp={1}>
                         {t.title}
                       </Text>
-                      <Flex align="center" gap="12px" mt="2px">
-                        <Text fontSize="12px" color="textFaint">
+                      <Flex align="center" columnGap="12px" rowGap="2px" mt="2px" wrap="wrap">
+                        <Text fontSize="12px" color="textFaint" whiteSpace="nowrap">
                           {t.questionCount} question
                           {t.questionCount === 1 ? "" : "s"}
                         </Text>
                         <Flex align="center" gap="4px">
                           <Users size={12} strokeWidth={1.5} color="var(--chakra-colors-text-faint)" />
-                          <Text fontSize="12px" color="textFaint">
+                          <Text fontSize="12px" color="textFaint" whiteSpace="nowrap">
                             {t.attempts ?? 0} attempt
                             {(t.attempts ?? 0) === 1 ? "" : "s"}
                           </Text>
                         </Flex>
                         {t.avgScore != null && (
-                          <Text fontSize="12px" color="textFaint">
+                          <Text fontSize="12px" color="textFaint" whiteSpace="nowrap">
                             avg {Math.round(t.avgScore)}%
                           </Text>
                         )}
                       </Flex>
                     </Box>
-                    <Badge tone={t.type === "QUIZ" ? "success" : "accent"}>
-                      {t.type.replace(/_/g, " ")}
-                    </Badge>
-                    <ChevronRight size={16} strokeWidth={1.5} color="var(--chakra-colors-text-faint)" />
+                    <Flex align="center" gap="8px" flexShrink={0}>
+                      <Badge tone={t.type === "QUIZ" ? "success" : "accent"}>
+                        {t.type.replace(/_/g, " ")}
+                      </Badge>
+                      <ChevronRight size={16} strokeWidth={1.5} color="var(--chakra-colors-text-faint)" />
+                    </Flex>
                   </Flex>
                 ))}
               </Stack>

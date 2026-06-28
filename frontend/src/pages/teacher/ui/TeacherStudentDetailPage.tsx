@@ -185,8 +185,8 @@ export default function TeacherStudentDetailPage() {
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={insight.curve.map((c) => ({ ...c, day: fmtDay(c.day) }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" vertical={false} />
-                    <XAxis dataKey="day" tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={{ stroke: "var(--chakra-colors-border)" }} tickLine={false} />
-                    <YAxis domain={[0, 100]} tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="day" tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={{ stroke: "var(--chakra-colors-border)" }} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+                    <YAxis domain={[0, 100]} tick={{ fill: "var(--chakra-colors-text-faint)", fontSize: 12 }} axisLine={false} tickLine={false} width={36} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Line type="monotone" dataKey="accuracy" stroke="#4F7CFF" strokeWidth={2} dot={false} />
                   </LineChart>
@@ -250,7 +250,11 @@ export default function TeacherStudentDetailPage() {
           </>
         )}
 
-        <Grid templateColumns={{ base: "1fr", lg: "1.4fr 1fr" }} gap="16px" alignItems="start">
+        <Grid
+          templateColumns={{ base: "minmax(0, 1fr)", lg: "minmax(0, 1.4fr) minmax(0, 1fr)" }}
+          gap="16px"
+          alignItems="start"
+        >
           {data && (
             <Card title="Mastery by topic" noPadding>
               {mastery.length === 0 ? (

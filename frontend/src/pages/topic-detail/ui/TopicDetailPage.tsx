@@ -73,7 +73,17 @@ function SkillTabs({
   onChange: (s: Skill) => void;
 }) {
   return (
-    <Flex borderBottom="1px solid" borderColor="border" gap="4px" mb="24px">
+    <Flex
+      borderBottom="1px solid"
+      borderColor="border"
+      gap="4px"
+      mb="24px"
+      overflowX="auto"
+      css={{
+        scrollbarWidth: "none",
+        "&::-webkit-scrollbar": { display: "none" },
+      }}
+    >
       {TABS.map((t) => {
         const isActive = active === t.key;
         return (
@@ -85,6 +95,8 @@ function SkillTabs({
             px="14px"
             h="38px"
             mb="-1px"
+            flexShrink={0}
+            whiteSpace="nowrap"
             fontSize="14px"
             fontWeight={isActive ? "500" : "400"}
             color={isActive ? "text" : "textMuted"}

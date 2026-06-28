@@ -86,7 +86,7 @@ export default function TeacherTestEditPage() {
         }
         actions={
           test && (
-            <Flex gap="8px">
+            <Flex gap="8px" wrap="wrap">
               <Button
                 variant="outline"
                 h="32px"

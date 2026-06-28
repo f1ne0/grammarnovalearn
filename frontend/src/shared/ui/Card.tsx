@@ -19,15 +19,24 @@ export function Card({
         <Flex
           justify="space-between"
           align="center"
+          gap="12px"
+          flexWrap="wrap"
           px="20px"
           py="14px"
           borderBottom="1px solid"
           borderColor="border"
         >
-          <Text fontSize="15px" fontWeight="600" color="text">
+          <Text
+            fontSize="15px"
+            fontWeight="600"
+            color="text"
+            flex="1 1 auto"
+            minW="100px"
+            lineClamp={1}
+          >
             {title}
           </Text>
-          {action}
+          {action && <Box flexShrink={0}>{action}</Box>}
         </Flex>
       )}
       <Box p={noPadding ? 0 : "20px"}>{children}</Box>

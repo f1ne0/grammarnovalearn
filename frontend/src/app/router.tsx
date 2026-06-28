@@ -63,6 +63,16 @@ const GroupsManagePage = lazy(
 );
 const TestsPage = lazy(() => import("../pages/tests/ui/TestsPage"));
 const TestTakePage = lazy(() => import("../pages/tests/ui/TestTakePage"));
+const PracticeIndexPage = lazy(
+  () => import("../pages/practice/ui/PracticeIndexPage"),
+);
+const AchievementsPage = lazy(
+  () => import("../pages/achievements/ui/AchievementsPage"),
+);
+const GoalsPage = lazy(() => import("../pages/goals/ui/GoalsPage"));
+const LeaderboardPage = lazy(
+  () => import("../pages/leaderboard/ui/LeaderboardPage"),
+);
 const PracticeHubPage = lazy(
   () => import("../pages/practice/ui/PracticeHubPage"),
 );
@@ -217,10 +227,42 @@ export function AppRouter() {
             }
           />
           <Route
+            path="/practice"
+            element={
+              <Protected>
+                <PracticeIndexPage />
+              </Protected>
+            }
+          />
+          <Route
             path="/practice/:skill"
             element={
               <Protected>
                 <PracticeHubPage />
+              </Protected>
+            }
+          />
+          <Route
+            path="/achievements"
+            element={
+              <Protected>
+                <AchievementsPage />
+              </Protected>
+            }
+          />
+          <Route
+            path="/goals"
+            element={
+              <Protected>
+                <GoalsPage />
+              </Protected>
+            }
+          />
+          <Route
+            path="/leaderboard"
+            element={
+              <Protected>
+                <LeaderboardPage />
               </Protected>
             }
           />

@@ -51,4 +51,9 @@ export class MeController {
   async speaking(@CurrentUser() user: JwtUser) {
     return this.meService.speakingHistory(user.sub);
   }
+
+  @Get('leaderboard')
+  async leaderboard(@CurrentUser() user: JwtUser) {
+    return this.meService.leaderboard(user.sub);
+  }
 }

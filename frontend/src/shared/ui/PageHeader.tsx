@@ -32,7 +32,11 @@ export function PageHeader({
         >
           {title}
         </Text>
-        {actions && <Flex gap="10px">{actions}</Flex>}
+        {actions && (
+          <Flex gap="10px" wrap="wrap">
+            {actions}
+          </Flex>
+        )}
       </Flex>
     </Box>
   );

@@ -497,6 +497,7 @@ export default function TeacherContentPage() {
                           py="12px"
                           align="center"
                           gap="12px"
+                          flexWrap={{ base: "wrap", md: "nowrap" }}
                           borderBottom="1px solid"
                           borderColor="border"
                           _last={{ borderBottom: "none" }}
@@ -526,61 +527,75 @@ export default function TeacherContentPage() {
                             </Box>
                           )}
                           <BookOpen size={16} strokeWidth={1.5} color="var(--chakra-colors-text-faint)" />
-                          <Box flex="1" minW={0}>
+                          <Box flex="1" minW="120px">
                             <Text fontSize="14px" color="text" lineClamp={1}>
                               {t.title}
                             </Text>
-                            <Text fontFamily="mono" fontSize="12px" color="textFaint">
+                            <Text
+                              fontFamily="mono"
+                              fontSize="12px"
+                              color="textFaint"
+                              lineClamp={1}
+                              wordBreak="break-all"
+                            >
                               {t.slug} · {t.exerciseCount} exercises
                             </Text>
                           </Box>
-                          {noEx ? (
-                            <Badge tone="warning">no exercises</Badge>
-                          ) : (
-                            <Badge>order {t.order}</Badge>
-                          )}
-                          {noEx && (
+                          <Flex
+                            align="center"
+                            gap="8px"
+                            flexShrink={0}
+                            flexWrap="wrap"
+                            ml={{ base: 0, md: "auto" }}
+                          >
+                            {noEx ? (
+                              <Badge tone="warning">no exercises</Badge>
+                            ) : (
+                              <Badge>order {t.order}</Badge>
+                            )}
+                            {noEx && (
+                              <Button
+                                variant="subtle"
+                                h="30px"
+                                px="10px"
+                                fontSize="13px"
+                                onClick={() =>
+                                  navigate(`/teacher/generate?topicId=${t.id}`)
+                                }
+                              >
+                                <Sparkles size={13} strokeWidth={1.5} />
+                                Generate
+                              </Button>
+                            )}
                             <Button
-                              variant="subtle"
+                              variant="ghost"
                               h="30px"
                               px="10px"
                               fontSize="13px"
-                              onClick={() =>
-                                navigate(`/teacher/generate?topicId=${t.id}`)
-                              }
+                              onClick={() => navigate(`/topics/${t.slug}`)}
                             >
-                              <Sparkles size={13} strokeWidth={1.5} />
-                              Generate
+                              Open
                             </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            h="30px"
-                            px="10px"
-                            fontSize="13px"
-                            onClick={() => navigate(`/topics/${t.slug}`)}
-                          >
-                            Open
-                          </Button>
-                          <Button
-                            variant="outline"
-                            h="30px"
-                            px="10px"
-                            fontSize="13px"
-                            onClick={() => void startEdit(t.slug)}
-                          >
-                            <Pencil size={13} strokeWidth={1.5} />
-                            Edit
-                          </Button>
-                          <Box
-                            as="button"
-                            color="var(--chakra-colors-text-faint)"
-                            lineHeight="0"
-                            _hover={{ color: "#F85149" }}
-                            onClick={() => setDelId(t.id)}
-                          >
-                            <Trash2 size={15} strokeWidth={1.5} />
-                          </Box>
+                            <Button
+                              variant="outline"
+                              h="30px"
+                              px="10px"
+                              fontSize="13px"
+                              onClick={() => void startEdit(t.slug)}
+                            >
+                              <Pencil size={13} strokeWidth={1.5} />
+                              Edit
+                            </Button>
+                            <Box
+                              as="button"
+                              color="var(--chakra-colors-text-faint)"
+                              lineHeight="0"
+                              _hover={{ color: "#F85149" }}
+                              onClick={() => setDelId(t.id)}
+                            >
+                              <Trash2 size={15} strokeWidth={1.5} />
+                            </Box>
+                          </Flex>
                         </Flex>
                       );
                     })}

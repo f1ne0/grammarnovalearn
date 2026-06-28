@@ -1,10 +1,12 @@
 import { Box, Flex, Text, VStack } from "@chakra-ui/react";
 import {
+  Award,
   BarChart3,
   ChevronDown,
   ChevronsLeft,
   ChevronsRight,
   ClipboardList,
+  Dumbbell,
   GraduationCap,
   LayersIcon,
   LayoutDashboard,
@@ -17,6 +19,8 @@ import {
   Settings,
   Sparkles,
   Sun,
+  Target,
+  Trophy,
   UserRound,
   Users,
   X,
@@ -332,8 +336,12 @@ function NavLinks({
     <>
       <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" {...p} />
       <SidebarItem to="/grammar" icon={GraduationCap} label="Grammar" {...p} />
+      <SidebarItem to="/practice" icon={Dumbbell} label="Practice" {...p} />
       <SidebarItem to="/reviews" icon={RefreshCw} label="Reviews" {...p} />
       <SidebarItem to="/tests" icon={ClipboardList} label="Tests" {...p} />
+      <SidebarItem to="/achievements" icon={Award} label="Achievements" {...p} />
+      <SidebarItem to="/goals" icon={Target} label="Goals" {...p} />
+      <SidebarItem to="/leaderboard" icon={Trophy} label="Leaderboard" {...p} />
     </>
   );
 }
